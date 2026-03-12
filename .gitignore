@@ -1,0 +1,5 @@
+venv/
+yolo11s.pt
+yolo26n.pt
+data/
+__pycache__/
