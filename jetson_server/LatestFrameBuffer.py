@@ -10,6 +10,7 @@ import numpy as np
 # Represente une frame reçue du client
 class FramePacket:
     def __init__(self, frame_data: np.ndarray = None):
+        self.frame_id = id(self)
         self.frame_data = frame_data
 
 class LatestFrameBuffer:

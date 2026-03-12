@@ -6,6 +6,8 @@ Responsabilité :
 - L'envoi des messages de détection au client
 - le cycle de vie du serveur
 """
+import json
+
 from shared.protocol.detection_schema import DetectionMessage
 import socket
 
@@ -86,7 +88,7 @@ class SocketServer:
         self.client_socket.sendall(header + payload)
 
     def send_detection_message(self, detection_message: DetectionMessage):
-        payload = detection_message.to_dict().encode("utf-8")
+        payload = json.dumps(detection_message.to_dict()).encode("utf-8")
         self.send_message(payload)
 
     def close_client(self):

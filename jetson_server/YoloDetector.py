@@ -10,6 +10,7 @@ import os
 import sys
 
 from ultralytics import YOLO
+from shared.protocol.detection_schema import Detection
 
 # Class for YOLO object detection
 class YoloDetector:
@@ -22,12 +23,23 @@ class YoloDetector:
             raise FileNotFoundError(f'Model file not found at {model_path}')
         return YOLO(model_path, task='detect')
 
-    def detect_objects(self, image):
+    def detect_objects(self, image) -> list[Detection]:
         results = self.model(image)
-        return results[0].boxes
+        detections = []
+        for result in results:
+            for box in result.boxes:
+                conf = box.conf.item()
+                if conf >= self.min_thresh:
+                    class_id = int(box.cls.item())
+                    class_name = self.model.names[class_id]
+                    x_min, y_min, x_max, y_max = map(int, box.xyxy[0].tolist())
+                    width = x_max - x_min
+                    height = y_max - y_min
+                    detections.append(Detection(class_name=class_name, confidence=conf, bbox=[x_min, y_min, width, height]))
+        return detections
     
-    def warmup_model(self):
-        pass
-
-    def build_detection_message(self):
-        pass
+    def warmup(self, image_path):
+        try:
+            self.model(image_path, warmup=True)
+        except Exception as e:
+            print(f"Error during model warmup: {e}")

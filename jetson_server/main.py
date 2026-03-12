@@ -10,6 +10,7 @@ from jetson_server.conf.config import model_path, min_thresh
 from jetson_server.YoloDetector import YoloDetector
 from jetson_server.LatestFrameBuffer import LatestFrameBuffer, FramePacket
 from shared.logs.logs import Logger
+from shared.protocol.detection_schema import DetectionMessage
 
 def launch_reception_thread(server, latest_frame_buffer):
     # 1. Tant que le serveur tourne et que le client est connecté :
@@ -36,26 +37,13 @@ def launch_inference_thread(server, latest_frame_buffer, yolo_detector):
         frame_packet = latest_frame_buffer.get_latest_frame()
         if frame_packet is None:
             continue
-            
+        # b. faire l’inférence pour obtenir les détections
         detections = yolo_detector.detect_objects(frame_packet.frame_data)
-
-        detections_message = [
-            {
-                "class_name": det.class_name,
-                "confidence": det.confidence,
-                "bbox": det.bbox
-            }
-            for det in detections
-        ]
-
-        server.send_message(f"{detections_message}".encode())
-
-        """
-    # d. construire DetectionMessage
-        detection_message = yolo_detector.build_detection_message(detections, frame_packet)
-    # e. envoyer le message au client
+        # c. construire DetectionMessage
+        detection_message = DetectionMessage(frame_id=frame_packet.frame_id, detections=detections)
+        # d. envoyer le message au client
         server.send_detection_message(detection_message)
-        """
+
 def stop_inference_server(server, reception_thread, inference_thread):
     pass
 
