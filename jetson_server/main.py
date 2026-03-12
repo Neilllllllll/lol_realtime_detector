@@ -10,6 +10,14 @@ from jetson_server.LatestFrameBuffer import LatestFrameBuffer
 from shared.logs.logs import Logger
 
 def launch_reception_thread(con, latest_frame_buffer):
+    while server.is_running():
+    payload = server.receive_message()
+
+    if payload is None:
+        print("Connexion fermée par le client.")
+        break
+
+    print(f"Message reçu : {len(payload)} octets")
     # 1. Tant que le serveur tourne et que le client est connecté :
     while con.is_running():
     # a. recevoir une frame
@@ -48,19 +56,23 @@ if __name__ == "__main__":
         yolo_detector = YoloDetector(model_path, min_thresh)
 
         # 3. Démarrer le serveur réseau
-        con = SocketServer()
-        logger.info("Attente d'une connection cliente ...")
-        con.start()
-        
-        if not con.is_running():
-            logger.error("Le serveur n'a pas pu démarrer !, fermeture du serveur ...")
-            sys.exit(1)
-        con.show_status()
-        i = 0
-        while True and i < 10:
-            con.receive_frame()
-            time.sleep(1)
-            i += 1
+        server = SocketServer(host="0.0.0.0", port=5596)
+
+        server.start()
+        server.accept_client()
+
+        print(server.show_status())
+
+
+
+    except KeyboardInterrupt:
+        print("\nArrêt demandé par l'utilisateur.")
+    except Exception as e:
+        print(f"Erreur serveur : {e}")
+        sys.exit(1)
+    finally:
+        server.end()
+
 
         """
         # 5. Lancer le thread de réception
