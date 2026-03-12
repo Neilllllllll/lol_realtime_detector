@@ -98,7 +98,7 @@ class SocketServer:
                 self.client_address = None
                 self.running = False
 
-    def end(self):
+    def stop(self):
         self.running = False
 
         if self.client_socket is not None:

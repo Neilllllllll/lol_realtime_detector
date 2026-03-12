@@ -7,7 +7,7 @@ class Detection:
     confidence: float
     bbox: list[int]  # [x_min, y_min, width, height]
 
-    def to_dict(self):        
+    def to_dict(self):
       return asdict(self)
     
 # Define a schema for a detection message

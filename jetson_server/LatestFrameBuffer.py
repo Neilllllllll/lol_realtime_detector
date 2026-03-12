@@ -5,12 +5,11 @@ Responsabilités :
 - l’attente/réveil entre les threads
 """
 import threading
+import numpy as np
 
 # Represente une frame reçue du client
 class FramePacket:
-    def __init__(self, frame_id: int, timestamp: float = 3.1, frame_data: str = "lol"):
-        self.frame_id = frame_id
-        self.timestamp = timestamp
+    def __init__(self, frame_data: np.ndarray = None):
         self.frame_data = frame_data
 
 class LatestFrameBuffer:

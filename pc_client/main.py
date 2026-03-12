@@ -1,21 +1,52 @@
 import os
-from pc_client.SocketClient import SocketClient
 import time
-from shared.logs.logs import Logger
 import cv2
 
-host, port = ('127.0.0.1', 5596)
-socket = SocketClient(host, port)
-logger = Logger()
+from shared.logs.logs import Logger
+from pc_client.SocketClient import SocketClient
 
-images_folder = "pc_client/images_test"
+def main():
+    logger = Logger()
+    host, port = ("127.0.0.1", 5596)
+    client = SocketClient(host, port)
 
-try:
-    for image in os.listdir(images_folder):
-        image_path = os.path.join(images_folder, image)
-        frame = cv2.imread(image_path)
-        print("taille de l'image en octets : ", os.path.getsize(image_path))
-        img_resized = cv2.resize(frame, (640, 480))
-        cv2.imshow("Image", img_resized)
-except ConnectionRefusedError:
-    logger.error("Connexion au serveur échoué ! ")
+    images_folder = "pc_client/images_test"
+
+    try:
+        client.connect()
+        logger.info("Client connecté au serveur.")
+
+        for image in os.listdir(images_folder):
+            image_path = os.path.join(images_folder, image)
+
+            frame = cv2.imread(image_path)
+            if frame is None:
+                logger.error(f"Impossible de lire l'image : {image_path}")
+                continue
+
+            ok, buffer = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+            if not ok:
+                logger.error(f"Impossible d'encoder l'image : {image_path}")
+                continue
+
+            payload = buffer.tobytes()
+            logger.info(f"Envoi de {image} ({len(payload)} octets)")
+            client.send_message(payload)
+
+            response = client.receive_message()
+            if response is None:
+                logger.info("Connexion fermée par le serveur.")
+                break
+
+            logger.info(f"Réponse reçue : {response.decode('utf-8')}")
+
+            time.sleep(1)
+
+    except Exception as e:
+        logger.error(f"Erreur côté client : {e}")
+    finally:
+        client.close()
+        logger.info("Client fermé proprement.")
+
+if __name__ == "__main__":
+    main()
