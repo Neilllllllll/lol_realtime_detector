@@ -45,9 +45,6 @@ def launch_inference_thread(server, latest_frame_buffer, yolo_detector):
         # d. envoyer le message au client
         server.send_detection_message(detection_message)
 
-def stop_inference_server(server, reception_thread, inference_thread):
-    pass
-
 if __name__ == "__main__":
     logger = Logger();
     server = None
@@ -57,6 +54,7 @@ if __name__ == "__main__":
 
         # 2. Charger YoloDetector et faire le warmup
         yolo_detector = YoloDetector(model_path, min_thresh)
+        yolo_detector.print_device_info()
 
         # 3. Démarrer le serveur réseau
         server = SocketServer(host=hostname, port=port)

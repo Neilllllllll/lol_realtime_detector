@@ -2,7 +2,7 @@
 import socket
 
 class SocketClient:
-    def __init__(self, host: str = "localhost", port: int = 5596):
+    def __init__(self, host: str = "172.16.207.222", port: int = 5598):
         self.host = host
         self.port = port
         self.server_address = (host, port)

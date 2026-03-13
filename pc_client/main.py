@@ -7,7 +7,7 @@ from pc_client.SocketClient import SocketClient
 
 def main():
     logger = Logger()
-    host, port = ("127.0.0.1", 5596)
+    host, port = ()
     client = SocketClient(host, port)
 
     images_folder = "pc_client/images_test"
