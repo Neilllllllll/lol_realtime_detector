@@ -37,7 +37,7 @@ def main():
     logger = Logger()
     fps = loop_time
     i = 0
-    client = connect_to_server("localhost", 5598)
+    client = connect_to_server("172.16.207.222", 5598)
     while(True):
         loop_time = time.time()
         logger.info("Début de la capture écran...")

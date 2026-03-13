@@ -19,12 +19,6 @@ class YoloDetector:
     def __init__(self, model_path, min_thresh):
         self.model = self.load_model(model_path)
         self.min_thresh = min_thresh
-        self.device = self.select_device()
-
-    def select_device(self) -> str:
-        if torch.cuda.is_available():
-            return "cuda:0"
-        return "cpu"
 
     def load_model(self, model_path):
         if (not os.path.exists(model_path)):
@@ -51,8 +45,3 @@ class YoloDetector:
             self.model(image_path, warmup=True)
         except Exception as e:
             print(f"Error during model warmup: {e}")
-
-    def print_device_info(self):
-        if torch.cuda.is_available():
-            print("GPU :", torch.cuda.get_device_name(0))
-        print("Device du modèle :", next(self.model.model.parameters()).device)
