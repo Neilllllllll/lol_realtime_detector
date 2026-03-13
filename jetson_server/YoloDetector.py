@@ -24,6 +24,9 @@ class YoloDetector:
         if torch.cuda.is_available():
             return "cuda:0"
         return "cpu"
+    
+    def __str__(self):
+        return f"YoloDetector using model on device {self.device}"
 
     def load_model(self, model_path):
         if not os.path.exists(model_path):
