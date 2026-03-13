@@ -54,7 +54,6 @@ if __name__ == "__main__":
 
         # 2. Charger YoloDetector et faire le warmup
         yolo_detector = YoloDetector(model_path, min_thresh)
-        yolo_detector.print_device_info()
 
         # 3. Démarrer le serveur réseau
         server = SocketServer(host=hostname, port=port)
