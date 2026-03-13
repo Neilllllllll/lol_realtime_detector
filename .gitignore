@@ -3,4 +3,5 @@ yolo11s.pt
 yolo26n.pt
 data/
 __pycache__/
-.env/
+
+.env
