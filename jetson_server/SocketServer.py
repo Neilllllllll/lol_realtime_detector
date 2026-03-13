@@ -12,7 +12,7 @@ from shared.protocol.detection_schema import DetectionMessage
 import socket
 
 class SocketServer:
-    def __init__(self, host: str = "", port: int = 5596, backlog: int = 1):
+    def __init__(self, host: str, port: int, backlog: int = 1):
         self.host = host
         self.port = port
         self.backlog = backlog
@@ -28,7 +28,7 @@ class SocketServer:
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen(self.backlog)
 
-        print(f"Serveur TCP en écoute sur {self.host or '0.0.0.0'}:{self.port}")
+        print(f"Serveur TCP en écoute sur {self.host}:{self.port}")
 
     def accept_client(self):
         if self.server_socket is None:

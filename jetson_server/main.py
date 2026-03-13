@@ -5,6 +5,7 @@ import time
 import cv2
 import numpy as np
 
+from jetson_server.conf.config import hostname, port
 from jetson_server.SocketServer import SocketServer
 from jetson_server.conf.config import model_path, min_thresh
 from jetson_server.YoloDetector import YoloDetector
@@ -58,7 +59,7 @@ if __name__ == "__main__":
         yolo_detector = YoloDetector(model_path, min_thresh)
 
         # 3. Démarrer le serveur réseau
-        server = SocketServer(host="0.0.0.0", port=5596)
+        server = SocketServer(host=hostname, port=port)
 
         server.start()
         server.accept_client()
