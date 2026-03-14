@@ -1,31 +1,27 @@
-"""
-Responsabilités :
-- Charger le modèle YOLO
-- Warmup du modèle pour réduire le temps de la première inférence
-- Effectuer l'inférence pour détecter les objets dans une image
-- Conversion des résultats en objet DetectionMessage
-"""
 import os
 import sys
-
 import torch
-
 from ultralytics import YOLO
 from shared.protocol.detection_schema import Detection
 
 class YoloDetector:
+    """
+    Responsabilités :
+    - Charger le modèle YOLO
+    - Warmup du modèle pour réduire le temps de la première inférence
+    - Effectuer l'inférence pour détecter les objets dans une image
+    - Conversion des résultats en objet Detection
+    """
+
     def __init__(self, model_path, min_thresh):
-        self.device = self._get_device()
+        self.device = self.get_device()
         self.model = self.load_model(model_path)
         self.min_thresh = min_thresh
 
-    def _get_device(self) -> str:
+    def get_device(self) -> str:
         if torch.cuda.is_available():
             return "cuda:0"
         return "cpu"
-    
-    def __str__(self):
-        return f"YoloDetector using model on device {self.device}"
 
     def load_model(self, model_path):
         if not os.path.exists(model_path):
@@ -33,12 +29,17 @@ class YoloDetector:
 
         model = YOLO(model_path, task="detect")
         model.to(self.device)
+
         return model
 
     def detect_objects(self, image) -> list[Detection]:
-        results = self.model(image, device=self.device, verbose=False)
-        detections = []
+        results = self.model.predict(
+            source=image,
+            device=0 if self.device.startswith("cuda") else "cpu",
+            verbose=False
+        )
 
+        detections = []
         for result in results:
             for box in result.boxes:
                 conf = float(box.conf.item())
@@ -61,6 +62,10 @@ class YoloDetector:
 
     def warmup(self, image_path):
         try:
-            self.model(image_path, device=self.device, verbose=False)
+            self.model.predict(
+                source=image_path,
+                device=0 if self.device.startswith("cuda") else "cpu",
+                verbose=False
+            )
         except Exception as e:
-            print(f"Error during model warmup on {self.device}: {e}")
+            raise RuntimeError(f"Error during model warmup: {e}")

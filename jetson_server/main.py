@@ -7,7 +7,7 @@ import numpy as np
 
 from jetson_server.conf.config import hostname, port
 from jetson_server.SocketServer import SocketServer
-from jetson_server.conf.config import model_path, min_thresh
+from jetson_server.conf.config import models_path, min_thresh, model_name
 from jetson_server.YoloDetector import YoloDetector
 from jetson_server.LatestFrameBuffer import LatestFrameBuffer, FramePacket
 from shared.logs.logs import Logger
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         latest_frame_buffer = LatestFrameBuffer()
 
         # 2. Charger YoloDetector et faire le warmup
-        yolo_detector = YoloDetector(model_path, min_thresh)
+        yolo_detector = YoloDetector(models_path + model_name, min_thresh)
         print(yolo_detector)
 
         # 3. Démarrer le serveur réseau
