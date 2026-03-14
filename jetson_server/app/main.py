@@ -6,10 +6,10 @@ import cv2
 import numpy as np
 
 from jetson_server.conf.config import hostname, port
-from jetson_server.SocketServer import SocketServer
+from jetson_server.app.network import SocketServer
 from jetson_server.conf.config import models_path, min_thresh, model_name
-from jetson_server.YoloDetector import YoloDetector
-from jetson_server.LatestFrameBuffer import LatestFrameBuffer, FramePacket
+from jetson_server.app.detection import YoloDetector
+from jetson_server.app.buffer import LatestFrameBuffer, FramePacket
 from shared.logs.logs import Logger
 from shared.protocol.detection_schema import DetectionMessage
 

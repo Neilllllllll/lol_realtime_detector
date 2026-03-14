@@ -6,7 +6,7 @@ import torch
 from ultralytics import YOLO
 import matplotlib.pyplot as plt
 from shared.logs.logs import Logger
-from jetson_server.YoloDetector import YoloDetector
+from jetson_server.app.detection.YoloDetector import YoloDetector
 
 def is_image_file(path: Path) -> bool:
     valid_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}
