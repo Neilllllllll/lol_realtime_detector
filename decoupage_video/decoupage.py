@@ -43,13 +43,14 @@ def decouper(video,dossier_sortie,intervalle_fps):
 
 
 if __name__ == "__main__":
-    with open("../champion.json") as f:
+    with open("./champions.json") as f:
         data = json.load(f)
 
     for champion in data["champions"]:
         video_path = "videos/" + champion + ".mp4"
         output_folder = f"frames_{champion}"
-        decouper(video_path, output_folder, 30)
+        print(f"Traitement de la vidéo de {champion}...")
+        decouper(video_path, output_folder, 30) # Découpe toutes les 30 frames 
 
 
 
