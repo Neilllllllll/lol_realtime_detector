@@ -34,6 +34,11 @@ def decouper(video,dossier_sortie,intervalle_fps):
         if frame_count % intervalle_fps == 0:
             nom_image = os.path.join(dossier_sortie, f"frame_{images_sauvegardees:04d}.jpg")
             cv2.imwrite(nom_image, frame)
+            img_path = os.path.join(dossier_sortie, f"frame_{images_sauvegardees:04d}.jpg")
+            txt_name = os.path.splitext(f"frame_{images_sauvegardees:04d}.jpg")[0] + '.txt'
+            txt_path = os.path.join(dossier_sortie, txt_name)
+            with open(txt_path, 'w') as f:
+                f.write(f"0 0.4802243 0.427310 0.095000 0.145000") #Coordonnées de la bounding box (x_center, y_center, width, height) manuel;
             images_sauvegardees += 1
         frame_count += 1
 
