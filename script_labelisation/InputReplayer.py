@@ -1,10 +1,8 @@
+import argparse
 import json
 import time
 from pathlib import Path
 from pynput import keyboard, mouse
-
-INPUT_FILE = "events.json"
-
 
 class InputReplayer:
     def __init__(self):
@@ -65,7 +63,7 @@ class InputReplayer:
         else:
             print(f"Événement ignoré: {event_type}")
 
-    def run(self, input_file: str):
+    def run_single_file(self, input_file: str):
         payload = json.loads(Path(input_file).read_text(encoding="utf-8"))
         events = payload.get("events", [])
 
@@ -96,8 +94,27 @@ class InputReplayer:
                 print(f"Erreur lors du rejeu de {event}: {exc}")
 
         print("Rejeu terminé.")
+    
+    def run_folder(self, folder: str):
+        folder_path = Path(folder)
+        if not folder_path.is_dir():
+            print(f"Le chemin spécifié n'est pas un dossier valide: {folder}")
+            return
 
+        event_files = list(folder_path.glob("*.json"))
+        if not event_files:
+            print(f"Aucun fichier d'événements trouvé dans le dossier: {folder}")
+            return
+
+        for event_file in event_files:
+            print(f"\nRejeu du fichier: {event_file}")
+            self.run_single_file(str(event_file))
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Rejoueur d'événements clavier et souris")
+    parser.add_argument("--folder", "-f", required=True, help="Dossier contenant les fichiers d'événements à rejouer")
+
+    args = parser.parse_args()
     replayer = InputReplayer()
-    replayer.run(INPUT_FILE)
+
+    replayer.run_folder(args.folder)

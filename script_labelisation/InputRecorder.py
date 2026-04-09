@@ -3,19 +3,21 @@ import threading
 import time
 from pathlib import Path
 from pynput import keyboard, mouse
-
-OUTPUT_FILE = "events.json"
+import argparse
+from screeninfo import get_monitors
 
 
 class InputRecorder:
-    def __init__(self):
+    def __init__(self, output_folder: str, file_name: str = "1_event.json"):
         self.events = []
         self.lock = threading.Lock()
         self.start_time = None
         self.running = True
         self.mouse_listener = None
         self.keyboard_listener = None
-
+        self.output_folder = output_folder
+        self.file_name = file_name
+        
     def now(self) -> float:
         return time.perf_counter() - self.start_time
 
@@ -80,6 +82,12 @@ class InputRecorder:
         except Exception as exc:
             print(f"Erreur on_click: {exc}")
 
+    def center_mouse(self):
+        monitor = get_monitors()[0]  # écran principal
+        width = monitor.width
+        height = monitor.height
+        mouse.Controller().position = (width // 2, height // 2)
+
     def on_scroll(self, x, y, dx, dy):
         try:
             self.add_event("mouse_scroll", {
@@ -99,14 +107,20 @@ class InputRecorder:
         }
         Path(path).write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
-    def run(self, output_file: str):
+    def save_in_folder(self, file_name: str):
+        output_path = Path(self.output_folder)
+        output_path.mkdir(parents=True, exist_ok=True)
+        self.save(str(output_path / file_name))
+
+    def run(self):
         self.start_time = time.perf_counter()
 
+        self.center_mouse()
         print("Enregistrement en cours...")
         print("Appuie sur ESC pour arrêter et sauvegarder.\n")
 
         self.mouse_listener = mouse.Listener(
-            on_move=self.on_move,
+            # on_move=self.on_move,
             on_click=self.on_click,
             on_scroll=self.on_scroll
         )
@@ -121,11 +135,17 @@ class InputRecorder:
         self.keyboard_listener.join()
         self.mouse_listener.stop()
 
-        self.save(output_file)
-        print(f"\nEnregistrement terminé. Fichier sauvegardé : {output_file}")
+        self.save_in_folder(self.file_name)
+        print(f"\nEnregistrement terminé. Fichier sauvegardé : {self.output_folder + self.file_name}")
         print(f"Nombre d'événements : {len(self.events)}")
 
 
 if __name__ == "__main__":
-    recorder = InputRecorder()
-    recorder.run(OUTPUT_FILE)
+    parser = argparse.ArgumentParser(description="Enregistreur d'événements clavier et souris")
+    parser.add_argument("--output_folder", "-o", required=True, help="Dossier de sortie pour les événements enregistrés")
+    parser.add_argument("--file_name", "-n", default="1_event.json", help="Nom du fichier de sortie (par défaut: 1_event.json)")
+
+    args = parser.parse_args()
+    recorder = InputRecorder(args.output_folder, args.file_name)
+
+    recorder.run()
