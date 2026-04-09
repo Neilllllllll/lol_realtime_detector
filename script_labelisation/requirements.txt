@@ -1,0 +1,10 @@
+evdev==1.9.3
+EWMHlib==0.2
+PyMonCtl==0.92
+pynput==1.8.1
+python-xlib==0.33
+PyWinBox==0.7
+PyWinCtl==0.4.1
+screeninfo==0.8.1
+six==1.17.0
+typing_extensions==4.15.0
