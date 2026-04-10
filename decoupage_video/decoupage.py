@@ -2,7 +2,7 @@ import cv2
 import os
 import json
 
-def decouper(video,dossier_sortie,intervalle_fps):
+def decouper(video,dossier_sortie,intervalle_fps,coordonnnees_bbox):
 
 
     if not os.path.exists(dossier_sortie):
@@ -38,7 +38,7 @@ def decouper(video,dossier_sortie,intervalle_fps):
             txt_name = os.path.splitext(f"frame_{images_sauvegardees:04d}.jpg")[0] + '.txt'
             txt_path = os.path.join(dossier_sortie, txt_name)
             with open(txt_path, 'w') as f:
-                f.write(f"0 0.4802243 0.427310 0.095000 0.145000") #Coordonnées de la bounding box (x_center, y_center, width, height) manuel;
+                f.write(f"{coordonnnees_bbox}\n") #Coordonnées de la bounding box (x_center, y_center, width, height) manuel;
             images_sauvegardees += 1
         frame_count += 1
 
@@ -54,8 +54,10 @@ if __name__ == "__main__":
     for champion in data["champions"]:
         video_path = "videos/" + champion + ".mp4"
         output_folder = f"frames_{champion}"
+        coordonnnees_bbox = data["champions"][champion]
         print(f"Traitement de la vidéo de {champion}...")
-        decouper(video_path, output_folder, 30) # Découpe toutes les 30 frames 
-
+        print(f"Coordonnées de la bounding box pour {champion} : {coordonnnees_bbox}")
+        decouper(video_path, output_folder, 30, coordonnnees_bbox)#Lancement decoupage de la vidéo avec un intervalle de 30 frames
+        
 
 
