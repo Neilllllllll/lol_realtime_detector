@@ -9,7 +9,7 @@ from pydrive2.drive import GoogleDrive
 # --- CONFIGURATION ---
 # Le 'r' avant les guillemets est obligatoire pour les chemins Windows
 PATH_LOCAL = r"C:\Users\valen\Videos\NVIDIA\League of Legends\*.mp4"
-NOM_DOSSIER_DRIVE = "video_champions_lol"
+ID_DOSSIER_DRIVE = "1xogPi4q2TkGkvDwBgDxuEG2aKWY9ybQE" # Remplacez par l'ID de votre dossier sur Google Drive
 FILE_IDENTIFIANTS = "mes_identifiants.txt"
 
 def get_latest_video(path):
@@ -59,14 +59,11 @@ def main(nom_video):
     if video_path:
         nouveau_nom = os.path.basename(video_path) # Garde le nom d'origine de la vidéo
         print(f"Fichier trouvé : {nouveau_nom}")
-        
-        # 3. DOSSIER DRIVE
-        folder_id = get_or_create_folder(drive, NOM_DOSSIER_DRIVE)
 
         # 4. UPLOAD
         file_drive = drive.CreateFile({
             'title': nom_video,
-            'parents': [{'id': folder_id}]
+            'parents': [{'id': ID_DOSSIER_DRIVE}]
         })
 
         print("Envoi en cours sur Google Drive...")
