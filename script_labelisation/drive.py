@@ -4,9 +4,8 @@ from pydrive2.drive import GoogleDrive
 from config import Config
 
 class DriveUploader:
-    def __init__(self, local_path: str, id_dossier_drive: str, file_identifiants: str):
+    def __init__(self, id_dossier_drive: str, file_identifiants: str):
         self.id_dossier_drive = id_dossier_drive
-        self.local_path = local_path
         self.file_identifiants = file_identifiants
         self.con_drive = self.authenticate()
 
