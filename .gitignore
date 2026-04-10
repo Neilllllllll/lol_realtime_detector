@@ -2,3 +2,5 @@ venv/
 data/
 __pycache__/
 .env
+.venv/
+*.json
