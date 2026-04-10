@@ -3,15 +3,16 @@ import json
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
 from pynput import keyboard, mouse
+import pyautogui
 
 
 class InputReplayer:
-    def __init__(self, text_to_type: Optional[str] = None):
+    def __init__(self, folder_screenshots: str = "./screenshots", champion_name: str = "default"):
         self.mouse_controller = mouse.Controller()
         self.keyboard_controller = keyboard.Controller()
-        self.text_to_type = text_to_type or ""
+        self.folder_screenshots = folder_screenshots
+        self.champion_name = champion_name
 
     @staticmethod
     def deserialize_key(key_data: Dict[str, Any]):
@@ -69,7 +70,12 @@ class InputReplayer:
             self.keyboard_controller.release(key)
 
         elif event_type == "text_input":
-            self.type_text(self.text_to_type)
+            self.type_text(self.champion_name)
+        
+        elif event_type == "screenshot":
+            screenshot = pyautogui.screenshot()
+            timestamp = int(time.time() * 1000)
+            screenshot.save(f"{self.folder_screenshots}/{self.champion_name}_screenshot_{timestamp}.png")
 
         else:
             print(f"Événement ignoré: {event_type}")
@@ -138,8 +144,18 @@ if __name__ == "__main__":
         default="",
         help="Chaîne à écrire lorsqu'un événement text_input est rencontré"
     )
-
+    parser.add_argument(
+        "--champion",
+        "-c",
+        default="default",
+        help="Nom du champion pour les captures d'écran"
+    )
+    parser.add_argument(
+        "--screenshots_folder",
+        "-s",
+        default="./screenshots",
+        help="Dossier où les captures d'écran seront sauvegardées"
+    )
     args = parser.parse_args()
-
-    replayer = InputReplayer(text_to_type=args.text)
+    replayer = InputReplayer(text_to_type=args.champion, folder_screenshots=args.screenshots_folder, champion_name=args.champion)
     replayer.run_folder(args.folder)

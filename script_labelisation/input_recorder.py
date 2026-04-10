@@ -19,6 +19,7 @@ class InputRecorder:
         record_mouse_move: bool = False,
         start_key=keyboard.Key.f7,
         text_trigger_key=keyboard.Key.f8,
+        screenshot_key=keyboard.Key.f9
     ):
         self.events: List[Dict[str, Any]] = []
         self.lock = threading.Lock()
@@ -36,7 +37,8 @@ class InputRecorder:
 
         self.start_key = start_key
         self.text_trigger_key = text_trigger_key
-
+        self.screenshot_key = screenshot_key
+        
     def now(self) -> float:
         if self.start_time is None:
             return 0.0
@@ -73,6 +75,7 @@ class InputRecorder:
         print("\nEnregistrement démarré.")
         print(f"{self.text_trigger_key} : insérer un marqueur 'écrire le texte'")
         print("ESC : arrêter et sauvegarder")
+        print(f"{self.screenshot_key} : prendre une capture d'écran")
         print()
 
     def on_key_press(self, key: Any):
@@ -92,6 +95,12 @@ class InputRecorder:
             if key == self.text_trigger_key:
                 self.add_event("text_input", {})
                 print(f"[Recorder] Marqueur 'écrire le texte' ajouté à t={self.now():.3f}s")
+                return
+
+            # Touche spéciale pour prendre une capture d'écran
+            if key == self.screenshot_key:
+                self.add_event("screenshot", {})
+                print(f"[Recorder] Capture d'écran ajoutée à t={self.now():.3f}s")
                 return
 
             # Ne pas enregistrer la touche de démarrage comme un input normal
@@ -115,7 +124,7 @@ class InputRecorder:
                 return
 
             # Ne pas enregistrer les touches spéciales de contrôle
-            if key in (self.start_key, self.text_trigger_key):
+            if key in (self.start_key, self.text_trigger_key, self.screenshot_key):
                 return
 
             self.add_event("key_release", {
@@ -196,6 +205,7 @@ class InputRecorder:
         print("Recorder prêt.")
         print(f"{self.start_key} : démarrer l'enregistrement")
         print(f"{self.text_trigger_key} : insérer un marqueur 'écrire le texte'")
+        print(f"{self.screenshot_key} : prendre une capture d'écran")
         print("ESC : arrêter et sauvegarder")
         print()
 
