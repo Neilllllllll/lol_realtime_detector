@@ -1,102 +1,92 @@
-import json
 import os
-import glob
-import time
-import gc
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
+from config import Config
 
-# --- CONFIGURATION ---
-# Le 'r' avant les guillemets est obligatoire pour les chemins Windows
-PATH_LOCAL = r"C:\Users\valen\Videos\NVIDIA\League of Legends\*.mp4"
-ID_DOSSIER_DRIVE = "1xogPi4q2TkGkvDwBgDxuEG2aKWY9ybQE" # Remplacez par l'ID de votre dossier sur Google Drive
-FILE_IDENTIFIANTS = "mes_identifiants.txt"
+class DriveUploader:
+    def __init__(self, local_path: str, id_dossier_drive: str, file_identifiants: str):
+        self.id_dossier_drive = id_dossier_drive
+        self.local_path = local_path
+        self.file_identifiants = file_identifiants
+        self.con_drive = self.authenticate()
 
-def get_latest_video(path):
-    """Trouve la vidéo la plus récente dans le dossier spécifié."""
-    files = glob.glob(path)
-    if not files:
-        return None
-    return max(files, key=os.path.getmtime)
+    def authenticate(self):
+        """Gère l'authentification avec Google Drive."""
+        gauth = GoogleAuth()
+        gauth.LoadCredentialsFile(self.file_identifiants)
 
-def get_or_create_folder(drive, folder_name):
-    """Trouve le dossier sur le Drive, ou le crée s'il n'existe pas."""
-    query = f"title = '{folder_name}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
-    file_list = drive.ListFile({'q': query}).GetList()
-    
-    if file_list:
-        return file_list[0]['id']
-    else:
-        folder = drive.CreateFile({'title': folder_name, 'mimeType': 'application/vnd.google-apps.folder'})
+        if gauth.credentials is None:
+            print("Première connexion : Ouverture du navigateur...")
+            gauth.LocalWebserverAuth()
+        elif gauth.access_token_expired:
+            print("Connexion expirée : Renouvellement automatique...")
+            gauth.Refresh()
+        else:
+            print("Connexion automatique réussie !")
+            gauth.Authorize()
+
+        gauth.SaveCredentialsFile(self.file_identifiants)
+        return GoogleDrive(gauth)
+
+    def create_drive_folder(self, folder_name: str, parent_id: str = None) -> str:
+        """Crée un dossier sur Google Drive et retourne son ID."""
+        metadata = {
+            'title': folder_name,
+            'mimeType': 'application/vnd.google-apps.folder'
+        }
+
+        if parent_id:
+            metadata['parents'] = [{'id': parent_id}]
+
+        folder = self.con_drive.CreateFile(metadata)
         folder.Upload()
         return folder['id']
 
-def main(nom_video):
-    # 1. AUTHENTIFICATION AVEC SAUVEGARDE
-    gauth = GoogleAuth()
-    
-    # Charge les identifiants s'ils existent
-    gauth.LoadCredentialsFile(FILE_IDENTIFIANTS)
-    
-    if gauth.credentials is None:
-        print("Première connexion : Ouverture du navigateur...")
-        gauth.LocalWebserverAuth()
-    elif gauth.access_token_expired:
-        print("Connexion expirée : Renouvellement automatique...")
-        gauth.Refresh()
-    else:
-        print("Connexion automatique réussie !")
-        gauth.Authorize()
-    
-    # Sauvegarde pour la prochaine fois
-    gauth.SaveCredentialsFile(FILE_IDENTIFIANTS)
-
-    drive = GoogleDrive(gauth)
-
-    # 2. RECHERCHE DE LA VIDÉO
-    video_path = get_latest_video(PATH_LOCAL)
-    
-    if video_path:
-        nouveau_nom = os.path.basename(video_path) # Garde le nom d'origine de la vidéo
-        print(f"Fichier trouvé : {nouveau_nom}")
-
-        # 4. UPLOAD
-        file_drive = drive.CreateFile({
-            'title': nom_video,
-            'parents': [{'id': ID_DOSSIER_DRIVE}]
+    def upload_file(self, file_path: str, parent_id: str):
+        """Upload un fichier dans un dossier Drive donné."""
+        file_drive = self.con_drive.CreateFile({
+            'title': os.path.basename(file_path),
+            'parents': [{'id': parent_id}]
         })
-
-        print("Envoi en cours sur Google Drive...")
-        file_drive.SetContentFile(video_path)
+        file_drive.SetContentFile(file_path)
         file_drive.Upload()
-        print("Upload terminé avec succès !")
+        print(f"Fichier uploadé : {file_path}")
 
-        # 5. NETTOYAGE ET SUPPRESSION FORCÉE
-        print("Nettoyage de la mémoire et attente de libération du fichier...")
-        
-        # On force PyDrive et Python à tout lâcher
-        file_drive = None 
-        gc.collect()      
-        
-        # Boucle pour patienter si Windows ou NVIDIA bloque encore le fichier
-        supprime = False
-        for i in range(10): # 10 essais maximum
-            try:
-                os.remove(video_path)
-                print(f"✅ Fichier local supprimé avec succès : {nouveau_nom}")
-                supprime = True
-                break
-            except PermissionError:
-                print(f"⏳ Tentative {i+1}/10 : Fichier bloqué (NVIDIA/Antivirus). Nouvel essai dans 3s...")
-                time.sleep(3)
-                
-        if not supprime:
-            print("❌ Impossible de supprimer la vidéo. Elle est définitivement verrouillée par un autre processus.")
-    else:
-        print("Aucune vidéo trouvée dans le dossier.")
+    def upload_folder(self, folder_path: str, parent_id: str = None):
+        """
+        Upload récursivement un dossier local vers Google Drive.
+        Retourne l'ID du dossier créé sur Drive.
+        """
+        if not os.path.isdir(folder_path):
+            raise NotADirectoryError(f"Ce chemin n'est pas un dossier : {folder_path}")
+
+        if parent_id is None:
+            parent_id = self.id_dossier_drive
+
+        folder_name = os.path.basename(os.path.normpath(folder_path))
+        drive_folder_id = self.create_drive_folder(folder_name, parent_id)
+        print(f"Dossier créé sur Drive : {folder_name} (ID: {drive_folder_id})")
+
+        for item in os.listdir(folder_path):
+            local_item_path = os.path.join(folder_path, item)
+
+            if os.path.isdir(local_item_path):
+                self.upload_folder(local_item_path, drive_folder_id)
+            else:
+                self.upload_file(local_item_path, drive_folder_id)
+
+        return drive_folder_id
 
 if __name__ == "__main__":
-    with open("../champions.json") as f:
-        data = json.load(f)
-    for champion in data["champions"]:
-        main(champion)
+    ID_DOSSIER_DRIVE = Config.ID_DOSSIER_DRIVE
+    FILE_IDENTIFIANTS = "mes_identifiants.txt"
+    LOCAL_FOLDER = Config.LOCAL_FOLDER
+
+    uploader = DriveUploader(
+        local_path=LOCAL_FOLDER,
+        id_dossier_drive=ID_DOSSIER_DRIVE,
+        file_identifiants=FILE_IDENTIFIANTS
+    )
+
+    uploaded_folder_id = uploader.upload_folder(LOCAL_FOLDER)
+    print(f"Dossier uploadé avec succès sur Google Drive ! ID : {uploaded_folder_id}")
