@@ -8,6 +8,7 @@ import time
 
 if __name__ == "__main__":
     folder_screenshots = "champ_folder_temp"
+    folder_actions = "actions"
     # 1. Créer un dossier où on stockera temporairement les images des champions
     os.makedirs(folder_screenshots, exist_ok=True)
 
@@ -25,15 +26,15 @@ if __name__ == "__main__":
         # 4. Créer un folder pour stocker les images du champion
         os.makedirs(f"champ_folder/{champion}", exist_ok=True)
 
-        input_replayer = InputReplayer(champion_name=champion, folder_screenshots=f"{folder_screenshots}/{champion}")
+        input_replayer = InputReplayer(champion_name=champion, folder_screenshots=f"{folder_screenshots}/{champion}", )
         # 5. On pointe directement vers le dossier 'actions' qui est juste à côté
-        input_replayer.run_single_file("actions/launch_game.json")
+        input_replayer.run_single_file(f"{folder_actions}/launch_game.json")
         time.sleep(60) # 1 minute d'attente
         
-        input_replayer.run_single_file("actions/play_and_leave.json")
+        input_replayer.run_single_file(f"{folder_actions}/play_and_leave.json")
         time.sleep(20) # 1 minute d'attente
 
         # 6. On upload le dossier du champion sur Google Drive
         drive_con.upload_folder(f"champ_folder/{champion}")
-        
+
         os.rmdir(f"champ_folder/{champion}")

@@ -139,12 +139,6 @@ if __name__ == "__main__":
         help="Dossier contenant les fichiers d'événements à rejouer"
     )
     parser.add_argument(
-        "--text",
-        "-t",
-        default="",
-        help="Chaîne à écrire lorsqu'un événement text_input est rencontré"
-    )
-    parser.add_argument(
         "--champion",
         "-c",
         default="default",
@@ -156,6 +150,7 @@ if __name__ == "__main__":
         default="./screenshots",
         help="Dossier où les captures d'écran seront sauvegardées"
     )
+    
     args = parser.parse_args()
-    replayer = InputReplayer(text_to_type=args.champion, folder_screenshots=args.screenshots_folder, champion_name=args.champion)
+    replayer = InputReplayer(folder_screenshots=args.screenshots_folder, champion_name=args.champion, )
     replayer.run_folder(args.folder)
