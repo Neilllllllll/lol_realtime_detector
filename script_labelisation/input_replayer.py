@@ -2,22 +2,25 @@ import argparse
 import json
 import time
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 from pynput import keyboard, mouse
 
+
 class InputReplayer:
-    def __init__(self):
+    def __init__(self, text_to_type: Optional[str] = None):
         self.mouse_controller = mouse.Controller()
         self.keyboard_controller = keyboard.Controller()
+        self.text_to_type = text_to_type or ""
 
     @staticmethod
-    def deserialize_key(key_data):
+    def deserialize_key(key_data: Dict[str, Any]):
         kind = key_data["kind"]
         value = key_data["value"]
 
         if kind == "char":
             return value
 
-        # Exemple: "Key.enter" -> keyboard.Key.enter
         if kind == "special" and value.startswith("Key."):
             key_name = value.split(".", 1)[1]
             return getattr(keyboard.Key, key_name)
@@ -25,15 +28,20 @@ class InputReplayer:
         raise ValueError(f"Format de touche inconnu: {key_data}")
 
     @staticmethod
-    def deserialize_button(button_str):
-        # Exemple: "Button.left" -> mouse.Button.left
+    def deserialize_button(button_str: str):
         if button_str.startswith("Button."):
             button_name = button_str.split(".", 1)[1]
             return getattr(mouse.Button, button_name)
 
         raise ValueError(f"Format de bouton inconnu: {button_str}")
 
-    def replay_event(self, event):
+    def type_text(self, text: str):
+        if not text:
+            print("[Replayer] Chaîne vide fournie pour text_input.")
+            return
+        self.keyboard_controller.type(text)
+
+    def replay_event(self, event: Dict[str, Any]):
         event_type = event["type"]
         data = event["data"]
 
@@ -60,32 +68,37 @@ class InputReplayer:
             key = self.deserialize_key(data["key"])
             self.keyboard_controller.release(key)
 
+        elif event_type == "text_input":
+            self.type_text(self.text_to_type)
+
         else:
             print(f"Événement ignoré: {event_type}")
 
-    def run_single_file(self, input_file: str):
+    def load_events(self, input_file: str) -> List[Dict[str, Any]]:
         payload = json.loads(Path(input_file).read_text(encoding="utf-8"))
-        events = payload.get("events", [])
+        return payload.get("events", [])
+
+    def run_single_file(self, input_file: str):
+        events = self.load_events(input_file)
 
         if not events:
-            print("Aucun événement à rejouer.")
+            print(f"Aucun événement à rejouer dans {input_file}.")
             return
 
-        print("Rejeu dans 3 secondes...")
+        print(f"Rejeu du fichier {input_file} dans 3 secondes...")
         time.sleep(3)
         print("Rejeu démarré.")
 
         replay_start = time.perf_counter()
 
         for event in events:
-            target_time = event["time"]
+            target_time = event.get("time", 0)
 
             while True:
                 elapsed = time.perf_counter() - replay_start
                 remaining = target_time - elapsed
                 if remaining <= 0:
                     break
-                # Petite pause pour éviter de monopoliser le CPU
                 time.sleep(min(remaining, 0.001))
 
             try:
@@ -94,27 +107,39 @@ class InputReplayer:
                 print(f"Erreur lors du rejeu de {event}: {exc}")
 
         print("Rejeu terminé.")
-    
+
     def run_folder(self, folder: str):
         folder_path = Path(folder)
         if not folder_path.is_dir():
             print(f"Le chemin spécifié n'est pas un dossier valide: {folder}")
             return
 
-        event_files = list(folder_path.glob("*.json"))
+        event_files = sorted(folder_path.glob("*.json"))
         if not event_files:
             print(f"Aucun fichier d'événements trouvé dans le dossier: {folder}")
             return
 
         for event_file in event_files:
-            print(f"\nRejeu du fichier: {event_file}")
+            print(f"\n--- Rejeu du fichier: {event_file.name} ---")
             self.run_single_file(str(event_file))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Rejoueur d'événements clavier et souris")
-    parser.add_argument("--folder", "-f", required=True, help="Dossier contenant les fichiers d'événements à rejouer")
+    parser.add_argument(
+        "--folder",
+        "-f",
+        required=True,
+        help="Dossier contenant les fichiers d'événements à rejouer"
+    )
+    parser.add_argument(
+        "--text",
+        "-t",
+        default="",
+        help="Chaîne à écrire lorsqu'un événement text_input est rencontré"
+    )
 
     args = parser.parse_args()
-    replayer = InputReplayer()
 
+    replayer = InputReplayer(text_to_type=args.text)
     replayer.run_folder(args.folder)
