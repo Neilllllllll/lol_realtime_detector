@@ -5,3 +5,5 @@ __pycache__/
 .venv/
 script_labelisation/actions/
 script_labelisation/events/
+client_secrets.json
+mes_identifiants.txt
