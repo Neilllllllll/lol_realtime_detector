@@ -17,12 +17,15 @@ class InputRecorder:
         output_folder: str,
         file_name: str = "1_event.json",
         record_mouse_move: bool = False,
+        start_key=keyboard.Key.f7,
         text_trigger_key=keyboard.Key.f8,
     ):
         self.events: List[Dict[str, Any]] = []
         self.lock = threading.Lock()
+
         self.start_time: Optional[float] = None
         self.running = True
+        self.recording_started = False
 
         self.mouse_listener = None
         self.keyboard_listener = None
@@ -30,6 +33,8 @@ class InputRecorder:
         self.output_folder = output_folder
         self.file_name = file_name
         self.record_mouse_move = record_mouse_move
+
+        self.start_key = start_key
         self.text_trigger_key = text_trigger_key
 
     def now(self) -> float:
@@ -38,6 +43,9 @@ class InputRecorder:
         return time.perf_counter() - self.start_time
 
     def add_event(self, event_type: str, data: Dict[str, Any]) -> None:
+        if not self.recording_started:
+            return
+
         with self.lock:
             self.events.append({
                 "time": self.now(),
@@ -57,20 +65,43 @@ class InputRecorder:
             "value": str(key)
         }
 
+    def start_recording(self):
+        self.center_mouse()
+        self.start_time = time.perf_counter()
+        self.recording_started = True
+
+        print("\nEnregistrement démarré.")
+        print(f"{self.text_trigger_key} : insérer un marqueur 'écrire le texte'")
+        print("ESC : arrêter et sauvegarder")
+        print()
+
     def on_key_press(self, key: Any):
         try:
+            # ESC arrête toujours
             if key == keyboard.Key.esc:
                 self.running = False
                 return False
 
+            # Tant que l'enregistrement n'a pas démarré, seule la touche start_key est acceptée
+            if not self.recording_started:
+                if key == self.start_key:
+                    self.start_recording()
+                return
+
+            # Touche spéciale pour insérer un marqueur text_input
             if key == self.text_trigger_key:
                 self.add_event("text_input", {})
                 print(f"[Recorder] Marqueur 'écrire le texte' ajouté à t={self.now():.3f}s")
                 return
 
+            # Ne pas enregistrer la touche de démarrage comme un input normal
+            if key == self.start_key:
+                return
+
             self.add_event("key_press", {
                 "key": self.serialize_key(key)
             })
+
         except Exception as exc:
             print(f"Erreur on_key_press: {exc}")
 
@@ -79,24 +110,34 @@ class InputRecorder:
             if key == keyboard.Key.esc:
                 return False
 
-            if key == self.text_trigger_key:
+            # Ignore toutes les touches tant que le record n'a pas démarré
+            if not self.recording_started:
+                return
+
+            # Ne pas enregistrer les touches spéciales de contrôle
+            if key in (self.start_key, self.text_trigger_key):
                 return
 
             self.add_event("key_release", {
                 "key": self.serialize_key(key)
             })
+
         except Exception as exc:
             print(f"Erreur on_key_release: {exc}")
 
     def on_move(self, x: int, y: int):
-        if not self.record_mouse_move:
+        if not self.record_mouse_move or not self.recording_started:
             return
+
         try:
             self.add_event("mouse_move", {"x": x, "y": y})
         except Exception as exc:
             print(f"Erreur on_move: {exc}")
 
     def on_click(self, x: int, y: int, button: Any, pressed: bool):
+        if not self.recording_started:
+            return
+
         try:
             self.add_event("mouse_click", {
                 "x": x,
@@ -108,6 +149,9 @@ class InputRecorder:
             print(f"Erreur on_click: {exc}")
 
     def on_scroll(self, x: int, y: int, dx: int, dy: int):
+        if not self.recording_started:
+            return
+
         try:
             self.add_event("mouse_scroll", {
                 "x": x,
@@ -132,9 +176,12 @@ class InputRecorder:
             "version": self.FORMAT_VERSION,
             "created_at": time.time(),
             "record_mouse_move": self.record_mouse_move,
+            "start_key": str(self.start_key),
             "text_trigger_key": str(self.text_trigger_key),
+            "recording_started": self.recording_started,
             "events": self.events,
         }
+
         Path(path).write_text(
             json.dumps(payload, indent=2, ensure_ascii=False),
             encoding="utf-8"
@@ -146,12 +193,10 @@ class InputRecorder:
         self.save(str(output_path / file_name))
 
     def run(self):
-        self.start_time = time.perf_counter()
-
-        self.center_mouse()
-        print("Enregistrement en cours...")
-        print("ESC : arrêter et sauvegarder")
+        print("Recorder prêt.")
+        print(f"{self.start_key} : démarrer l'enregistrement")
         print(f"{self.text_trigger_key} : insérer un marqueur 'écrire le texte'")
+        print("ESC : arrêter et sauvegarder")
         print()
 
         self.mouse_listener = mouse.Listener(
