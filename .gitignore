@@ -3,4 +3,4 @@ data/
 __pycache__/
 .env
 .venv/
-*.json
+script_labelisation/actions/
