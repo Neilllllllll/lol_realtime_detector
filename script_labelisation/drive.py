@@ -82,7 +82,6 @@ if __name__ == "__main__":
     LOCAL_FOLDER = Config.LOCAL_FOLDER
 
     uploader = DriveUploader(
-        local_path=LOCAL_FOLDER,
         id_dossier_drive=ID_DOSSIER_DRIVE,
         file_identifiants=FILE_IDENTIFIANTS
     )
