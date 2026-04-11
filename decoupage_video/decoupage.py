@@ -3,8 +3,6 @@ import os
 import json
 
 def decouper(video,dossier_sortie,intervalle_fps,coordonnnees_bbox):
-
-
     if not os.path.exists(dossier_sortie):
         os.makedirs(dossier_sortie)
         print(f"Dossier '{dossier_sortie}' créé.")
@@ -14,7 +12,6 @@ def decouper(video,dossier_sortie,intervalle_fps,coordonnnees_bbox):
     if not(video.isOpened()):
         print("Erreur video.")
 
-
     #FPS de la video
     fps = video.get(cv2.CAP_PROP_FPS)
     total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -23,7 +20,6 @@ def decouper(video,dossier_sortie,intervalle_fps,coordonnnees_bbox):
 
     frame_count = 0
     images_sauvegardees = 0
-
 
     while True:
         ret, frame = video.read()

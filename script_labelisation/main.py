@@ -8,7 +8,7 @@ import time
 
 if __name__ == "__main__":
     folder_actions = "actions"
-    folder_screenshots = "screenshots"
+    folder_screenshots = "champion_screenshots"
     # 2. Initialiser la connexion à Google Drive
     drive_con = DriveUploader(
         id_dossier_drive=Config.ID_DOSSIER_DRIVE,
@@ -34,4 +34,9 @@ if __name__ == "__main__":
         # 6. On upload le dossier du champion sur Google Drive
         drive_con.upload_folder(f"{folder_screenshots}/{champion}")
 
+        # 7. On supprime les images du champion pour faire de la place pour le prochain champion
+        for file in os.listdir(f"{folder_screenshots}/{champion}"):
+            os.remove(f"{folder_screenshots}/{champion}/{file}")
+
+        # 8. On supprime le dossier du champion
         os.rmdir(f"{folder_screenshots}/{champion}")
