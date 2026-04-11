@@ -7,11 +7,8 @@ import json
 import time
 
 if __name__ == "__main__":
-    folder_screenshots = "champ_folder_temp"
     folder_actions = "actions"
-    # 1. Créer un dossier où on stockera temporairement les images des champions
-    os.makedirs(folder_screenshots, exist_ok=True)
-
+    folder_screenshots = "screenshots"
     # 2. Initialiser la connexion à Google Drive
     drive_con = DriveUploader(
         id_dossier_drive=Config.ID_DOSSIER_DRIVE,
@@ -24,7 +21,7 @@ if __name__ == "__main__":
     
     for champion in data["champions"]:
         # 4. Créer un folder pour stocker les images du champion
-        os.makedirs(f"champ_folder/{champion}", exist_ok=True)
+        os.makedirs(f"{folder_screenshots}/{champion}", exist_ok=True)
 
         input_replayer = InputReplayer(champion_name=champion, folder_screenshots=f"{folder_screenshots}/{champion}", )
         # 5. On pointe directement vers le dossier 'actions' qui est juste à côté
@@ -35,6 +32,6 @@ if __name__ == "__main__":
         time.sleep(20) # 1 minute d'attente
 
         # 6. On upload le dossier du champion sur Google Drive
-        drive_con.upload_folder(f"champ_folder/{champion}")
+        drive_con.upload_folder(f"{folder_screenshots}/{champion}")
 
-        os.rmdir(f"champ_folder/{champion}")
+        os.rmdir(f"{folder_screenshots}/{champion}")
