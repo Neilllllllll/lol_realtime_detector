@@ -26,6 +26,10 @@ class DriveUploader:
 
         gauth.SaveCredentialsFile(self.file_identifiants)
         return GoogleDrive(gauth)
+    
+    def is_authenticated(self) -> bool:
+        """Vérifie si l'authentification est valide."""
+        return self.con_drive.auth is not None and self.con_drive.auth.access_token is not None
 
     def create_drive_folder(self, folder_name: str, parent_id: str = None) -> str:
         """Crée un dossier sur Google Drive et retourne son ID."""
