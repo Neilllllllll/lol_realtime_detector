@@ -6,6 +6,10 @@ from typing import Any, Dict, List, Optional
 from pynput import keyboard, mouse
 import pyautogui
 
+"""
+Class permettant de rejouer des événements clavier et souris à partir de fichiers JSON générés par InputRecorder, 
+avec des fonctionnalités de synchronisation temporelle et de gestion des types d'événements (mouvements, clics, saisie de texte, captures d'écran).
+"""
 
 class InputReplayer:
     def __init__(self, folder_screenshots: str = "./screenshots", champion_name: str = "default"):

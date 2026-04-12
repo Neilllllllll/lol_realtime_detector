@@ -4,10 +4,12 @@ import threading
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
 from pynput import keyboard, mouse
 from screeninfo import get_monitors
 
+"""
+Class permettant d'enregistrer les événements clavier et souris, avec des fonctionnalités de contrôle de l'enregistrement (démarrage, insertion de marqueurs, capture d'écran) et de sauvegarde dans un format structuré.
+"""
 
 class InputRecorder:
     FORMAT_VERSION = 2

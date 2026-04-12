@@ -3,6 +3,11 @@ from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 from config import Config
 
+"""
+Class permettant de gérer l'authentification avec Google Drive, la création de dossiers et l'upload de fichiers/dossiers locaux vers Drive, 
+avec une structure organisée et des messages de feedback pour l'utilisateur.
+"""
+
 class DriveUploader:
     def __init__(self, id_dossier_drive: str, file_identifiants: str):
         self.id_dossier_drive = id_dossier_drive
